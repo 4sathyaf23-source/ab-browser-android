@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AB Browser</title>
+<style>
+  :root {
+    --night: #0d1226;
+    --dusk: #1d2350;
+    --glow: #5eead4;
+    --text: #f2f5ff;
+    --muted: #9aa4cf;
+    --glass: rgba(255, 255, 255, 0.08);
+    --glass-strong: rgba(255, 255, 255, 0.14);
+    --line: rgba(255, 255, 255, 0.16);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: var(--text);
+    font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 0%, #2f3a86 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 85% 100%, rgba(94, 234, 212, 0.16) 0%, transparent 70%),
+      var(--night);
+    overflow: hidden;
+  }
+
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .brand svg { width: 52px; height: 52px; flex: none; }
+  .brand-name {
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .brand-name span { color: var(--glow); font-weight: 300; }
+
+  .time {
+    font-size: clamp(72px, 14vw, 160px);
+    font-weight: 200;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .greeting {
+    margin: 10px 0 36px;
+    font-size: clamp(16px, 2.2vw, 22px);
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .search {
+    width: min(640px, 100%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 22px;
+    height: 58px;
+    border-radius: 29px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(12px);
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .search:focus-within {
+    background: var(--glass-strong);
+    border-color: var(--glow);
+    box-shadow: 0 0 0 4px rgba(94, 234, 212, 0.14);
+  }
+  .search svg { flex: none; width: 20px; height: 20px; color: var(--muted); }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font: inherit;
+    font-size: 17px;
+  }
+  .search input::placeholder { color: var(--muted); }
+
+  .shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px 12px;
+    margin-top: 56px;
+    max-width: 760px;
+  }
+  .shortcut {
+    position: relative;
+    width: 96px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 4px 8px;
+    border-radius: 16px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 13px;
+    transition: background 0.15s;
+  }
+  .shortcut:hover, .shortcut:focus-visible { background: var(--glass); outline: none; }
+  .shortcut:focus-visible { box-shadow: 0 0 0 2px var(--glow); }
+  .badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .shortcut span.name {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .remove {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: none;
+  }
+  .shortcut:hover .remove, .remove:focus-visible { display: block; }
+  .add .badge {
+    background: transparent;
+    border: 1.5px dashed var(--muted);
+    color: var(--muted);
+    font-size: 26px;
+    font-weight: 300;
+  }
+  .add { background: none; border: none; font-family: inherit; cursor: pointer; }
+
+  dialog {
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--dusk);
+    color: var(--text);
+    padding: 24px;
+    width: min(360px, 90vw);
+    font-family: inherit;
+  }
+  dialog::backdrop { background: rgba(5, 8, 20, 0.6); }
+  dialog h2 { margin: 0 0 16px; font-size: 18px; font-weight: 600; }
+  dialog label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+  dialog input {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--text);
+    font: inherit;
+  }
+  dialog input:focus { outline: 2px solid var(--glow); border-color: transparent; }
+  .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .actions button {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-cancel { background: var(--glass-strong); color: var(--text); }
+  .btn-save { background: var(--glow); color: #06231f; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+  <div class="brand">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#5eead4"/>
+          <stop offset="1" stop-color="#6366f1"/>
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="18" fill="url(#lg)"/>
+      <text x="32" y="43" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif"
+            font-size="30" font-weight="700" fill="#0d1226" letter-spacing="-1">AB</text>
+    </svg>
+    <div class="brand-name">AB <span>Browser</span></div>
+  </div>
+
+  <h1 class="time" id="time">--:--</h1>
+  <p class="greeting" id="greeting"></p>
+
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path>
+    </svg>
+    <input id="q" type="text" placeholder="Search or enter address" autocomplete="off" autofocus aria-label="Search or enter address">
+  </div>
+
+  <nav class="shortcuts" id="shortcuts" aria-label="Shortcuts"></nav>
+
+  <dialog id="dlg">
+    <form method="dialog" id="addForm">
+      <h2>Add shortcut</h2>
+      <label for="sName">Name</label>
+      <input id="sName" type="text" maxlength="20" required>
+      <label for="sUrl">Address</label>
+      <input id="sUrl" type="text" placeholder="example.com" required>
+      <div class="actions">
+        <button type="button" class="btn-cancel" id="cancel">Cancel</button>
+        <button type="submit" class="btn-save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+<script>
+  const STORE_KEY = 'ab_home_shortcuts';
+  const DEFAULTS = [
+    { name: 'YouTube',   url: 'https://www.youtube.com',   color: '#e5322d' },
+    { name: 'Instagram', url: 'https://www.instagram.com', color: '#c13584' },
+    { name: 'Facebook',  url: 'https://www.facebook.com',  color: '#1877f2' },
+    { name: 'Wikipedia', url: 'https://www.wikipedia.org', color: '#5b6275' },
+    { name: 'GitHub',    url: 'https://github.com',        color: '#6e40c9' },
+    { name: 'Gmail',     url: 'https://mail.google.com',   color: '#d93025' }
+  ];
+
+  // ---- Clock and greeting ----
+  const timeEl = document.getElementById('time');
+  const greetEl = document.getElementById('greeting');
+  function tick() {
+    const d = new Date();
+    timeEl.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    const h = d.getHours();
+    const part = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Good night';
+    greetEl.textContent = part + ' \u2013 ' + d.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+  tick();
+  setInterval(tick, 10000);
+
+  // ---- Search ----
+  function toUrl(text) {
+    text = text.trim();
+    if (!text) return null;
+    if (/^https?:\/\//i.test(text)) return text;
+    if (/^([a-z0-9-]+\.)+[a-z]{2,}(:\d+)?(\/.*)?$/i.test(text) || /^localhost(:\d+)?(\/.*)?$/i.test(text)) {
+      return 'https://' + text;
+    }
+    return 'https://www.google.com/search?q=' + encodeURIComponent(text);
+  }
+  document.getElementById('q').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const url = toUrl(e.target.value);
+    if (url) location.href = url;
+  });
+
+  // ---- Shortcuts ----
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) return list;
+      }
+    } catch (e) {}
+    return DEFAULTS.slice();
+  }
+  function save(list) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function colorFor(name) {
+    let h = 0;
+    for (const c of name) h = (h * 31 + c.charCodeAt(0)) % 360;
+    return 'hsl(' + h + ', 55%, 45%)';
+  }
+
+  const box = document.getElementById('shortcuts');
+  let list = load();
+
+  function render() {
+    box.innerHTML = '';
+    list.forEach((s, i) => {
+      const a = document.createElement('a');
+      a.className = 'shortcut';
+      a.href = s.url;
+
+      const badge = document.createElement('div');
+      badge.className = 'badge';
+      badge.style.background = s.color || colorFor(s.name);
+      badge.textContent = s.name.charAt(0).toUpperCase();
+
+      const name = document.createElement('span');
+      name.className = 'name';
+      name.textContent = s.name;
+
+      const rm = document.createElement('button');
+      rm.className = 'remove';
+      rm.type = 'button';
+      rm.title = 'Remove ' + s.name;
+      rm.setAttribute('aria-label', 'Remove ' + s.name);
+      rm.textContent = '\u00d7';
+      rm.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        list.splice(i, 1);
+        save(list);
+        render();
+      });
+
+      a.append(badge, name, rm);
+      box.appendChild(a);
+    });
+
+    const add = document.createElement('button');
+    add.className = 'shortcut add';
+    add.type = 'button';
+    add.innerHTML = '<div class="badge">+</div><span class="name">Add shortcut</span>';
+    add.addEventListener('click', openDialog);
+    box.appendChild(add);
+  }
+
+  // ---- Add dialog ----
+  const dlg = document.getElementById('dlg');
+  const nameIn = document.getElementById('sName');
+  const urlIn = document.getElementById('sUrl');
+  function openDialog() {
+    nameIn.value = '';
+    urlIn.value = '';
+    dlg.showModal();
+    nameIn.focus();
+  }
+  document.getElementById('cancel').addEventListener('click', () => dlg.close());
+  document.getElementById('addForm').addEventListener('submit', () => {
+    const name = nameIn.value.trim();
+    const url = toUrl(urlIn.value);
+    if (!name || !url || !/^https?:\/\//i.test(url) || url.includes('google.com/search')) return;
+    list.push({ name, url });
+    save(list);
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
