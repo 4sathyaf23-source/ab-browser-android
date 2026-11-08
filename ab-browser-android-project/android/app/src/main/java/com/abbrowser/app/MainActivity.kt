@@ -57,8 +57,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Enable global cookies so Google sign-in and other services work correctly
-        CookieManager.getInstance().setAcceptCookie(true)
+        // Enable global and file-scheme cookies to fix Google sign-in
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.setAcceptCookie(true)
+        cookieManager.setAcceptFileSchemeCookies(true)
 
         urlBar = findViewById(R.id.urlBar)
         tabsBtn = findViewById(R.id.tabsBtn)
@@ -139,9 +141,18 @@ class MainActivity : AppCompatActivity() {
         )
         wv.visibility = View.GONE
 
+        // Proper cookie and storage allocation per tab type
+        val cookieManager = CookieManager.getInstance()
+        if (isIncognito) {
+            cookieManager.setAcceptCookie(false)
+        } else {
+            cookieManager.setAcceptThirdPartyCookies(wv, true)
+        }
+
         val s = wv.settings
         s.javaScriptEnabled = true
         s.domStorageEnabled = !isIncognito
+        s.databaseEnabled = !isIncognito
         s.useWideViewPort = true
         s.loadWithOverviewMode = true
         s.setSupportZoom(true)
@@ -152,12 +163,6 @@ class MainActivity : AppCompatActivity() {
         s.setSupportMultipleWindows(true)
         s.mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
         s.userAgentString = defaultUserAgent
-
-        if (isIncognito) {
-            CookieManager.getInstance().setAcceptCookie(false)
-        } else {
-            CookieManager.getInstance().setAcceptThirdPartyCookies(wv, true)
-        }
 
         wv.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView, url: String?, favicon: android.graphics.Bitmap?) {
