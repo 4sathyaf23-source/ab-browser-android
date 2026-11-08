@@ -58,9 +58,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         // Enable global and file-scheme cookies to fix Google sign-in
-        val cookieManager = CookieManager.getInstance()
-        cookieManager.setAcceptCookie(true)
-        cookieManager.setAcceptFileSchemeCookies(true)
+        CookieManager.getInstance().setAcceptCookie(true)
+        CookieManager.setAcceptFileSchemeCookies(true)
 
         urlBar = findViewById(R.id.urlBar)
         tabsBtn = findViewById(R.id.tabsBtn)
