@@ -57,6 +57,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Enable global cookies so Google sign-in and other services work correctly
+        CookieManager.getInstance().setAcceptCookie(true)
+
         urlBar = findViewById(R.id.urlBar)
         tabsBtn = findViewById(R.id.tabsBtn)
         menuBtn = findViewById(R.id.menuBtn)
